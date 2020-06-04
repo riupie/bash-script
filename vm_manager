@@ -1,9 +1,6 @@
 #!/bin/bash
 
-################################################################################
-######################### Created by Riupie ####################################
-################################################################################
-# This script used to manage remote KVM.
+
 vm_start() {
     virsh -c qemu+ssh://root@${kvm_hostname}/system start ${vm_name}
 } 
@@ -45,7 +42,7 @@ OPTION:
 
 ARGUMENTS:
   - server1 server2 serverN         One or more VM should be manage.
-  - --all                           Used along with `list` OPTION. List all VMs.                  
+  - --all                           Used along with list OPTION. List all VMs.                  
 EOF
     exit 1
 }
