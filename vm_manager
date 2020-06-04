@@ -1,0 +1,83 @@
+#!/bin/bash
+
+################################################################################
+######################### Created by Riupie ####################################
+################################################################################
+# This script used to manage remote KVM.
+vm_start() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system start ${vm_name}
+} 
+vm_shutdown() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system shutdown ${vm_name}
+}
+vm_suspend() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system suspend ${vm_name}
+}
+vm_resume() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system resume ${vm_name}
+}
+vm_force-off() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system destroy ${vm_name}
+}
+vm_info() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system dominfo ${vm_name}
+}
+kvm_info() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system nodeinfo
+}
+vm_list() {
+    virsh -c qemu+ssh://root@${kvm_hostname}/system list ${vm_name}
+}
+usage(){
+    cat >&2 <<EOF
+usage:
+$(basename "$0") [kvm_hostname] [OPTION] [ARGUMENTS]
+OPTION:
+  - force-off   Forcefully shutdown VMs. Run this when VMs unresponsive.
+  - kvminfo     Display hypervisor Information.
+  - list        List active VMs.
+  - start       Start one or more VMs. 
+  - shutdown    Shutdown one or more VMs.                    
+  - suspend     Suspend one or more VMs.
+  - resume      Resume suspended VMs.
+  - vminfo      Display VMs Information.
+  - usage       Help
+
+ARGUMENTS:
+  - server1 server2 serverN         One or more VM should be manage.
+  - --all                           Used along with `list` OPTION. List all VMs.                  
+EOF
+    exit 1
+}
+
+declare -A commands
+commands=(
+    [start]=vm_start
+    [shutdown]=vm_shutdown
+    [suspend]=vm_suspend
+    [list]=vm_list
+    [vminfo]=vm_info
+    [kvminfo]=kvm_info
+    [force-off]=vm_force-off
+    [usage]=usage
+)
+
+[ $# -ge 2 ]||usage
+
+kvm_hostname="$1"
+if [ -n "${commands[$2]}" ];then
+    cmd="${commands[$2]}"
+    shift 2
+    if [ -z "$1" ];then
+        $cmd
+    else 
+        while [ -n "$1" ];do
+        vm_name="$1"
+        $cmd
+        shift
+        done
+    fi
+else
+    echo "wrong command" >&2
+    usage
+fi
